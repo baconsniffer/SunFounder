@@ -53,3 +53,6 @@ dkms.conf
 
 # Temp files
 *.*~
+
+# Media files
+*.mp?
