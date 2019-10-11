@@ -12,18 +12,19 @@ uint8_t SCLK_PIN = 7;
 
 char buf[50];
 char day[10];
-/* 串口数据缓存 */
+/* Serial data cache */
 String comdata = "";
 int numdata[7] ={0}, j = 0, mark = 0;
-/* 创建 DS1302 对象 */
+/* Create a DS1302 object */
 DS1302 rtc(CE_PIN, IO_PIN, SCLK_PIN);
 
 
 void print_time()
 {
-    /* 从 DS1302 获取当前时间 */
+    int i;
+    /* Get current time from DS1302 */
     Time t = rtc.time();
-    /* 将星期从数字转换为名称 */
+    /* Convert week from number to name */
     memset(day, 0, sizeof(day));
     switch (t.day)
     {
@@ -35,12 +36,14 @@ void print_time()
     case 6: strcpy(day, "Fri"); break;
     case 7: strcpy(day, "Sat"); break;
     }
-    /* 将日期代码格式化凑成buf等待输出 */
+    /* Format the date code into a buf waiting output */
     snprintf(buf, sizeof(buf), "%s %04d-%02d-%02d %02d:%02d:%02d", day, t.yr, t.mon, t.date, t.hr, t.min, t.sec);
-    /* 输出日期到串口 */
-    Serial.println(buf);
-    lcd.setCursor(2,0);
-    lcd.print(t.yr);
+    /* Output date to serial port */
+    Serial.println(buf); buf[0] = 0;
+    ;snprintf(buf, sizeof(buf), "%04d-%02d-%02d", t.yr, t.mon, t.date);
+    lcd.setCursor(0,0);
+    lcd.print(t.yr%100);
+    Serial.print("--->"); Serial.print(t.yr%100); Serial.println("<---");
     lcd.print("-");
     lcd.print(t.mon/10);
     lcd.print(t.mon%10);
@@ -49,6 +52,8 @@ void print_time()
     lcd.print(t.date%10);
     lcd.print(" ");
     lcd.print(day);
+//    lcd.print(buf);
+    
     lcd.setCursor(4,1);
     lcd.print(t.hr);
     lcd.print(":");
@@ -72,14 +77,14 @@ void setup()
 void loop()
 {
 
-    /* 当串口有数据的时候，将数据拼接到变量comdata */
+    /* When the serial port has data, splicing data into variables comdata */
     while (Serial.available() > 0)
     {
         comdata += char(Serial.read());
         delay(2);
         mark = 1;
     }
-    /* 以逗号分隔分解comdata的字符串，分解结果变成转换成数字到numdata[]数组 */
+    /* Separate the comdata string by comma, and the result of the decomposition becomes a number converted to a numdata[] array. */
     if(mark == 1)
     {
         Serial.print("You inputed : ");
@@ -95,17 +100,17 @@ void loop()
                 numdata[j] = numdata[j] * 10 + (comdata[i] - '0');
             }
         }
-        /* 将转换好的numdata凑成时间格式，写入DS1302 */
+        /* Convert the converted numdata into a time format and write it to the DS1302 */
         Time t(numdata[0], numdata[1], numdata[2], numdata[3], numdata[4], numdata[5], numdata[6]);
         rtc.time(t);
         mark = 0;j=0;
-        /* 清空 comdata 变量，以便等待下一次输入 */
+        /* Empty the comdata variable to wait for the next input */
         comdata = String("");
-        /* 清空 numdata */
+        /* Empty numdata */
         for(int i = 0; i < 7 ; i++) numdata[i]=0;
     }
     
-    /* 打印当前时间 */
+    /* Print current time */
     print_time();
     delay(1000);
 }

@@ -55,4 +55,7 @@ dkms.conf
 *.*~
 
 # Media files
-*.mp?
+* .mp?
+
+# OSX
+.DS_Store
