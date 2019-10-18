@@ -41,9 +41,13 @@ void print_time()
     /* Output date to serial port */
     Serial.println(buf); buf[0] = 0;
     ;snprintf(buf, sizeof(buf), "%04d-%02d-%02d", t.yr, t.mon, t.date);
-    lcd.setCursor(0,0);
-    lcd.print(t.yr%100);
-    Serial.print("--->"); Serial.print(t.yr%100); Serial.println("<---");
+    lcd.setCursor(1,0);
+    lcd.print(t.yr - t.yr/1000);      // Millenia
+    i = t.yr - (t.yr / 1000) * 1000;
+    lcd.print(i/100);                 // Century
+    i = i - (i/100) * 100;
+    lcd.print(i/10);                  // Decade
+    lcd.print(i%10);                  // Year
     lcd.print("-");
     lcd.print(t.mon/10);
     lcd.print(t.mon%10);
@@ -51,11 +55,12 @@ void print_time()
     lcd.print(t.date/10);
     lcd.print(t.date%10);
     lcd.print(" ");
-    lcd.print(day);
+    lcd.print(day[0]); lcd.print(day[1]); lcd.print(day[2]);
 //    lcd.print(buf);
     
     lcd.setCursor(4,1);
-    lcd.print(t.hr);
+    lcd.print(t.hr/10);
+    lcd.print(t.hr%10);
     lcd.print(":");
     lcd.print(t.min/10);
     lcd.print(t.min%10);
@@ -67,16 +72,18 @@ void print_time()
 
 void setup()
 {
-    Serial.begin(9600);
-    rtc.write_protect(false);
-    rtc.halt(false);
-    lcd.init();  //initialize the lcd
-  lcd.backlight();  //open the backlight 
+  Serial.begin(9600);
+  rtc.write_protect(false);
+  rtc.halt(false);
+  lcd.init();               //initialize the lcd
+  lcd.backlight();          //open the backlight 
+  
+  Serial.println("Set time as: YYYY,MM,DD,HH,MM,SS,DoW");
+  Serial.println("For Dow, 0 = Sunday, 1 = Monday, etc");
 }
 
 void loop()
 {
-
     /* When the serial port has data, splicing data into variables comdata */
     while (Serial.available() > 0)
     {
